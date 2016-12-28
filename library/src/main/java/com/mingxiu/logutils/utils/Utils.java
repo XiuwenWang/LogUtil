@@ -1,7 +1,12 @@
 package com.mingxiu.logutils.utils;
 
 
+import android.text.TextUtils;
+
 import com.mingxiu.logutils.Constant;
+import com.mingxiu.logutils.LogConfigImpl;
+import com.mingxiu.logutils.LogUtils;
+import com.mingxiu.logutils.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +21,8 @@ public class Utils {
     public static final int DIVIDER_BOTTOM = 2;
     public static final int DIVIDER_CENTER = 4;
     public static final int DIVIDER_NORMAL = 3;
+    public final static ThreadLocal<String> localTags = new ThreadLocal<>();
+
 
     /**
      * 打印分割线
@@ -62,128 +69,75 @@ public class Utils {
             stringList.add(msg);
         }
         return stringList;
-//        List<String> stringList = new ArrayList<>();
-//        int index = 0;
-//        int maxLength = Constant.LINE_MAX;
-//        int countOfSub = msg.length() / maxLength;
-//        if (countOfSub > 0) {
-//            while ((msg.length() - index) / maxLength > 0) {
-//                String sub = msg.substring(index, index + maxLength);
-//                int indexOf = sub.lastIndexOf(",");
-//                String substring = msg.substring(index, indexOf+2);
-//                stringList.add(substring);
-//                index += substring.length();
-//            }
-//            stringList.add(msg.substring(index, msg.length()));
-//        } else {
-//            stringList.add(msg);
-//        }
-//        return stringList;
+    }
+    /**
+     * 自动生成tag
+     *
+     * @return String LogUtils
+     */
+    public static String generateTag() {
+        String tempTag = localTags.get();
+        if (!TextUtils.isEmpty(tempTag)) {
+            localTags.remove();
+            return tempTag;
+        }
+        return LogConfigImpl.getInstance().getTagPrefix();
     }
 
-    public static String shorten(String string, int count, int length) {
-        if (string == null) return null;
-        String resultString = string;
-        if (Math.abs(length) < resultString.length()) {
-            if (length > 0)
-                resultString = string.substring(0, length);
-            if (length < 0)
-                resultString = string.substring(string.length() + length, string.length());
-        }
-        if (Math.abs(count) > resultString.length()) {
-            return String.format("%" + count + "s", resultString);
-        }
-        return resultString;
-    }
-
-    public static String shortenClassName(String className, int count, int maxLength) throws Exception {
-        className = shortenPackagesName(className, count);
-        if (className == null) return null;
-        if (maxLength == 0) return className;
-        if (maxLength > className.length()) return className;
-        if (maxLength < 0) {
-            maxLength = -maxLength;
-            StringBuilder builder = new StringBuilder();
-            for (int index = className.length() - 1; index > 0; ) {
-                int i = className.lastIndexOf('.', index);
-                if (i == -1) {
-                    if (builder.length() > 0
-                            && builder.length() + index + 1 > maxLength) {
-                        builder.insert(0, '*');
-                        break;
-                    }
-                    builder.insert(0, className.substring(0, index + 1));
-                } else {
-                    if (builder.length() > 0
-                            && builder.length() + (index + 1 - i) + 1 > maxLength) {
-                        builder.insert(0, '*');
-                        break;
-                    }
-                    builder.insert(0, className.substring(i, index + 1));
-                }
-                index = i - 1;
+    /**
+     * 获取当前activity栈信息
+     *
+     * @return caller
+     */
+    private static StackTraceElement getCurrentStackTrace() {
+        StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+        int stackOffset = getStackOffset(trace, LogUtils.class);
+        if (stackOffset == -1) {
+            stackOffset = getStackOffset(trace, Logger.class);
+            if (stackOffset == -1) {
+                return null;
             }
-            return builder.toString();
-        } else {
-            StringBuilder builder = new StringBuilder();
-            for (int index = 0; index < className.length(); ) {
-                int i = className.indexOf('.', index);
-                if (i == -1) {
-                    if (builder.length() > 0) {
-                        builder.insert(builder.length(), '*');
-                        break;
-                    }
-                    builder.insert(builder.length(), className.substring(index, className.length()));
-                    break;
-                } else {
-                    if (builder.length() > 0
-                            && i + 1 > maxLength) {
-                        builder.insert(builder.length(), '*');
-                        break;
-                    }
-
-                    builder.insert(builder.length(), className.substring(index, i + 1));
-                }
-
-                index = i + 1;
-            }
-            return builder.toString();
         }
+        return trace[stackOffset];
     }
 
-    // todo optimize it
-    private static String shortenPackagesName(String className, int count) {
-        if (className == null) return null;
-        if (count == 0) return className;
-        StringBuilder builder = new StringBuilder();
-        if (count > 0) {
-            int points = 1;
-            for (int index = 0; index < className.length(); ) {
-                int i = className.indexOf('.', index);
-                if (i == -1) {
-                    builder.insert(builder.length(), className.substring(index, className.length()));
-                    break;
-                } else {
-                    if (points == count) {
-                        builder.insert(builder.length(), className.substring(index, i));
-                        break;
-                    }
-                    builder.insert(builder.length(), className.substring(index, i + 1));
-                }
-                index = i + 1;
-                points++;
-            }
-        } else if (count < 0) {
-            String exceptString = shortenPackagesName(className, -count);
-            if (className.equals(exceptString)) {
-                int from = className.lastIndexOf('.') + 1;
-                int to = className.length();
-                builder.insert(builder.length(), className.substring(from, to));
-            } else
-                return className.replaceFirst(exceptString + '.', "");
+    /**
+     * 获取最顶部stack信息
+     * str＝str.substring(int beginIndex);
+     * 截取掉str从首字母起长度为beginIndex的字符串，将剩余字符串赋值给str；
+     * str＝str.substring(int beginIndex，int endIndex);
+     * 截取str中从beginIndex开始至endIndex结束时的字符串，并将其赋值给str;
+     *
+     * @return String ║ MainActivity$override.LogWriterString(MainActivity.java:141):
+     */
+    public static String getTopStackInfo() {
+        StackTraceElement caller = getCurrentStackTrace();
+        String stackTrace;
+        String tag = "%s.%s%s";
+        if (caller != null) {
+            stackTrace = caller.toString();
+            stackTrace = stackTrace.substring(stackTrace.lastIndexOf('('), stackTrace.length());
+            String callerClazzName = caller.getClassName();
+            callerClazzName = callerClazzName.substring(callerClazzName.lastIndexOf(".") + 1);
+            tag = String.format(tag, callerClazzName, caller.getMethodName(), stackTrace);
         }
-        return builder.toString();
+        return tag;
     }
 
+
+    private static int getStackOffset(StackTraceElement[] trace, Class cla) {
+        for (int i = Constant.MIN_STACK_OFFSET; i < trace.length; i++) {
+            StackTraceElement e = trace[i];
+            String name = e.getClassName();
+            if (cla.equals(Logger.class) && i < trace.length - 1 && trace[i + 1].getClassName()
+                    .equals(Logger.class.getName())) {
+                continue;
+            }
+            if (name.equals(cla.getName())) {
+                return ++i;
+            }
+        }
+        return -1;
+    }
 
 }

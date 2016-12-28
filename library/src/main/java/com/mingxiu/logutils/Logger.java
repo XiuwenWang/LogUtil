@@ -3,13 +3,14 @@ package com.mingxiu.logutils;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.mingxiu.logutils.utils.Utils;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.MissingFormatArgumentException;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
@@ -30,6 +31,8 @@ import static com.mingxiu.logutils.utils.Utils.DIVIDER_BOTTOM;
 import static com.mingxiu.logutils.utils.Utils.DIVIDER_CENTER;
 import static com.mingxiu.logutils.utils.Utils.DIVIDER_NORMAL;
 import static com.mingxiu.logutils.utils.Utils.DIVIDER_TOP;
+import static com.mingxiu.logutils.utils.Utils.generateTag;
+import static com.mingxiu.logutils.utils.Utils.getTopStackInfo;
 import static com.mingxiu.logutils.utils.Utils.largeStringToList;
 import static com.mingxiu.logutils.utils.Utils.printDividingLine;
 
@@ -64,10 +67,9 @@ import static com.mingxiu.logutils.utils.Utils.printDividingLine;
  * 修改备注：
  * 修订历史：1.0
  */
-class Logger implements Printer {
+public class Logger implements Printer {
 
     private LogConfigImpl mLogConfig;
-    private final ThreadLocal<String> localTags = new ThreadLocal<>();
 
     Logger() {
         this.mLogConfig = LogConfigImpl.getInstance();
@@ -82,21 +84,11 @@ class Logger implements Printer {
      */
     Printer setTag(String tag) {
         if (!TextUtils.isEmpty(tag)) {
-            localTags.set(tag);
+            Utils.localTags.set(tag);
         }
         return this;
     }
 
-    /**
-     * 打印字符串
-     *
-     * @param type int
-     * @param msg  String
-     * @param args Object...
-     */
-    private synchronized void logString(@LogLevel.LogLevelType int type, String msg, Object... args) {
-        logSomeLineString(type,msg,args);
-    }
     /**
      * 打印对象
      *
@@ -111,141 +103,39 @@ class Logger implements Printer {
         }
     }
 
-
     //单行
-    private void logOneLineString(@LogLevel.LogLevelType int type, String msg, Object... args) {
+    private void logOneLineString(@LogLevel.LogLevelType int type, String msg) {
         if (mLogConfig.isEnable() && type > mLogConfig.getLogLevel()) {
-            if (args.length > 0) {
-                try {
-                    msg = String.format(msg, args);
-                } catch (MissingFormatArgumentException e) {
-                    e(e);
-                }
-            }
             String tag = generateTag();
-            if (msg.length() > Constant.LINE_MAX) {
-                for (String subMsg : largeStringToList(msg)) {
-                    printLog(type, tag, printDividingLine(DIVIDER_NORMAL) + getTopStackInfo() + ": " + subMsg);
-                }
-            } else {
-                printLog(type, tag, printDividingLine(DIVIDER_NORMAL) + getTopStackInfo() + ": " + msg);
+            for (String subMsg : largeStringToList(msg)) {
+                printLog(type, tag, printDividingLine(DIVIDER_NORMAL) + getTopStackInfo() + ": " + subMsg);
             }
         }
     }
-    //多行
-    private void logSomeLineString(@LogLevel.LogLevelType int type, String msg, Object... args) {
-        if (args.length > 0) {
-            try {
-                msg = String.format(msg, args);
-            } catch (MissingFormatArgumentException e) {
-                e(e);
-            }
-        }
 
+    //多行
+    private void logSomeLineString(@LogLevel.LogLevelType int type, String msg) {
         if (mLogConfig.isEnable() && type > mLogConfig.getLogLevel()) {
             String tag = generateTag();
             if (mLogConfig.isShowBorder()) {//显示边界
                 printLog(type, tag, printDividingLine(DIVIDER_TOP));
                 printLog(type, tag, printDividingLine(DIVIDER_NORMAL) + getTopStackInfo());
                 printLog(type, tag, printDividingLine(DIVIDER_CENTER));
-                for (String subMsg : largeStringToList(msg)) {
-                    for (String sub : subMsg.split(Constant.BR)) {
-                        printLog(type, tag, printDividingLine(DIVIDER_NORMAL) + sub);
+                for (String sub : msg.split(Constant.BR)) {
+                    for (String subMsg : largeStringToList(sub)) {
+                        printLog(type, tag, printDividingLine(DIVIDER_NORMAL) + subMsg);
                     }
                 }
                 printLog(type, tag, printDividingLine(DIVIDER_BOTTOM));
             } else {                       //不显示边界
-                for (String subMsg : largeStringToList(msg)) {
-                    for (String sub : subMsg.split(Constant.BR)) {
-                        printLog(type, tag, printDividingLine(DIVIDER_NORMAL) + sub);
+                printLog(type, tag, printDividingLine(DIVIDER_NORMAL) + getTopStackInfo()+":");
+                for (String sub : msg.split(Constant.BR)) {
+                    for (String subMsg : largeStringToList(sub)) {
+                        printLog(type, tag, printDividingLine(DIVIDER_NORMAL) + subMsg);
                     }
-
                 }
             }
         }
-
-    }
-
-
-
-
-    /**
-     * 自动生成tag
-     *
-     * @return String LogUtils
-     */
-    private String generateTag() {
-        String tempTag = localTags.get();
-        if (!TextUtils.isEmpty(tempTag)) {
-            localTags.remove();
-            return tempTag;
-        }
-        return mLogConfig.getTagPrefix();
-    }
-
-    /**
-     * 获取当前activity栈信息
-     *
-     * @return caller
-     */
-    private StackTraceElement getCurrentStackTrace() {
-        StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-        int stackOffset = getStackOffset(trace, LogUtils.class);
-        if (stackOffset == -1) {
-            stackOffset = getStackOffset(trace, Logger.class);
-            if (stackOffset == -1) {
-                return null;
-            }
-        }
-        return trace[stackOffset];
-    }
-
-    /**
-     * 获取最顶部stack信息
-     * str＝str.substring(int beginIndex);
-     * 截取掉str从首字母起长度为beginIndex的字符串，将剩余字符串赋值给str；
-     * str＝str.substring(int beginIndex，int endIndex);
-     * 截取str中从beginIndex开始至endIndex结束时的字符串，并将其赋值给str;
-     *
-     * @return String ║ MainActivity$override.LogWriterString(MainActivity.java:141):
-     */
-    private String getTopStackInfo() {
-        String customTag = mLogConfig.getFormatTag(getCurrentStackTrace());
-        if (customTag != null) {
-            return customTag;
-        }
-        StackTraceElement caller = getCurrentStackTrace();
-        String stackTrace;
-        String tag = "%s.%s%s";
-        if (caller != null) {
-            stackTrace = caller.toString();
-            stackTrace = stackTrace.substring(stackTrace.lastIndexOf('('), stackTrace.length());
-            String callerClazzName = caller.getClassName();
-            callerClazzName = callerClazzName.substring(callerClazzName.lastIndexOf(".") + 1);
-            tag = String.format(tag, callerClazzName, caller.getMethodName(), stackTrace);
-        }
-
-        return tag;
-    }
-
-    private int getStackOffset(StackTraceElement[] trace, Class cla) {
-        for (int i = Constant.MIN_STACK_OFFSET; i < trace.length; i++) {
-            StackTraceElement e = trace[i];
-            String name = e.getClassName();
-            if (cla.equals(Logger.class) && i < trace.length - 1 && trace[i + 1].getClassName()
-                    .equals(Logger.class.getName())) {
-                continue;
-            }
-            if (name.equals(cla.getName())) {
-                return ++i;
-            }
-        }
-        return -1;
-    }
-
-    @Override
-    public void d(String message, Object... args) {
-        logOneLineString(TYPE_DEBUG, message, args);
     }
 
     @Override
@@ -254,18 +144,8 @@ class Logger implements Printer {
     }
 
     @Override
-    public void e(String message, Object... args) {
-        logString(TYPE_ERROR, message, args);
-    }
-
-    @Override
     public void e(Object object) {
         logObject(TYPE_ERROR, object);
-    }
-
-    @Override
-    public void w(String message, Object... args) {
-        logString(TYPE_WARM, message, args);
     }
 
     @Override
@@ -274,28 +154,13 @@ class Logger implements Printer {
     }
 
     @Override
-    public void i(String message, Object... args) {
-        logString(TYPE_INFO, message, args);
-    }
-
-    @Override
     public void i(Object object) {
         logObject(TYPE_INFO, object);
     }
 
     @Override
-    public void v(String message, Object... args) {
-        logString(TYPE_VERBOSE, message, args);
-    }
-
-    @Override
     public void v(Object object) {
         logObject(TYPE_VERBOSE, object);
-    }
-
-    @Override
-    public void wtf(String message, Object... args) {
-        logString(TYPE_WTF, message, args);
     }
 
     @Override
@@ -353,7 +218,6 @@ class Logger implements Printer {
             e(e.toString() + "\n\nxml = " + xml);
         }
     }
-
 
     /**
      * 打印日志

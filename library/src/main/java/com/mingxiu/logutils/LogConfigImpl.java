@@ -1,10 +1,6 @@
 package com.mingxiu.logutils;
 
 
-import android.text.TextUtils;
-
-import com.mingxiu.logutils.pattern.LogPattern;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,7 +8,7 @@ import java.util.List;
  * Created by pengwei on 16/3/4.
  * Log config
  */
-class LogConfigImpl implements LogConfig {
+public class LogConfigImpl implements LogConfig {
 
     private boolean enable = true;                  //是否允许日志输出
     private String tagPrefix = "LogUtils";          //日志log的前缀
@@ -20,7 +16,6 @@ class LogConfigImpl implements LogConfig {
     @LogLevel.LogLevelType
     private int logLevel = LogLevel.TYPE_VERBOSE;   //日志显示等级
     private List<Parser> parseList;                 //自定义对象打印
-    private String formatTag;                       //个性化设置Tag
 
     private static LogConfigImpl singleton;
 
@@ -28,7 +23,7 @@ class LogConfigImpl implements LogConfig {
         parseList = new ArrayList<>();
     }
 
-    static LogConfigImpl getInstance() {
+    public static LogConfigImpl getInstance() {
         if (singleton == null) {
             synchronized (LogConfigImpl.class) {
                 if (singleton == null) {
@@ -51,18 +46,6 @@ class LogConfigImpl implements LogConfig {
         return this;
     }
 
-    @Override
-    public LogConfig configFormatTag(String formatTag) {
-        this.formatTag = formatTag;
-        return this;
-    }
-
-    public String getFormatTag(StackTraceElement caller) {
-        if (TextUtils.isEmpty(formatTag)) {
-            return null;
-        }
-        return LogPattern.compile(formatTag).apply(caller);
-    }
 
     @Override
     public LogConfig configShowBorders(boolean showBorder) {

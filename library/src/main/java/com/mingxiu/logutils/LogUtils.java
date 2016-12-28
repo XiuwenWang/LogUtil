@@ -24,85 +24,24 @@ public final class LogUtils {
         return printer.setTag(tag);
     }
 
-    /**
-     * verbose输出
-     *
-     * @param msg
-     * @param args
-     */
-    public static void v(String msg, Object... args) {
-        printer.v(msg, args);
-    }
-
     public static void v(Object object) {
         printer.v(object);
-    }
-
-
-    /**
-     * debug输出
-     *
-     * @param msg
-     * @param args
-     */
-    public static void d(String msg, Object... args) {
-        printer.d(msg, args);
     }
 
     public static void d(Object object) {
         printer.d(object);
     }
 
-    /**
-     * info输出
-     *
-     * @param msg
-     * @param args
-     */
-    public static void i(String msg, Object... args) {
-        printer.i(msg, args);
-    }
-
     public static void i(Object object) {
         printer.i(object);
-    }
-
-    /**
-     * warn输出
-     *
-     * @param msg
-     * @param args
-     */
-    public static void w(String msg, Object... args) {
-        printer.w(msg, args);
     }
 
     public static void w(Object object) {
         printer.w(object);
     }
 
-    /**
-     * error输出
-     *
-     * @param msg
-     * @param args
-     */
-    public static void e(String msg, Object... args) {
-        printer.e(msg, args);
-    }
-
     public static void e(Object object) {
         printer.e(object);
-    }
-
-    /**
-     * assert输出
-     *
-     * @param msg
-     * @param args
-     */
-    public static void wtf(String msg, Object... args) {
-        printer.wtf(msg, args);
     }
 
     public static void wtf(Object object) {
