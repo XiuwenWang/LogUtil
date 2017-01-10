@@ -98,7 +98,9 @@ public class Logger implements Printer {
     private void logObject(@LogLevel.LogLevelType int type, Object object) {
         if (object instanceof String) {
             logOneLineString(type, (String) object);
-        } else {
+        } else if(object instanceof String[]||object instanceof int[]||object instanceof int[]){
+            logOneLineString(type, objectToString(object));
+        }else {
             logSomeLineString(type, objectToString(object));
         }
     }
@@ -128,7 +130,7 @@ public class Logger implements Printer {
                 }
                 printLog(type, tag, printDividingLine(DIVIDER_BOTTOM));
             } else {                       //不显示边界
-                printLog(type, tag, printDividingLine(DIVIDER_NORMAL) + getTopStackInfo()+":");
+                printLog(type, tag, printDividingLine(DIVIDER_NORMAL) + getTopStackInfo() + ":");
                 for (String sub : msg.split(Constant.BR)) {
                     for (String subMsg : largeStringToList(sub)) {
                         printLog(type, tag, printDividingLine(DIVIDER_NORMAL) + subMsg);
@@ -180,11 +182,15 @@ public class Logger implements Printer {
             d("JSON{json is empty}");
             return;
         }
+        if (json.length() < 80) {
+            d(json);
+            return;
+        }
         try {
             if (json.startsWith("{")) {
                 JSONObject jsonObject = new JSONObject(json);
                 String msg = jsonObject.toString(indent);
-                logSomeLineString(TYPE_DEBUG, msg);
+                logSomeLineString(TYPE_DEBUG, msg.replace("\\/","/"));
             } else if (json.startsWith("[")) {
                 JSONArray jsonArray = new JSONArray(json);
                 String msg = jsonArray.toString(indent);
@@ -204,6 +210,10 @@ public class Logger implements Printer {
     public void xml(String xml) {
         if (TextUtils.isEmpty(xml)) {
             d("XML{xml is empty}");
+            return;
+        }
+        if (xml.length() < 80) {
+            d(xml);
             return;
         }
         try {

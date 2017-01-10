@@ -17,6 +17,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    sourceSets { main { assets.srcDirs = ['src/main/assets', 'src/main/assets/2'] } }
 }
 buildscript {
     repositories {
@@ -37,7 +38,7 @@ dependencies {
     //黄油刀
     compile 'com.jakewharton:butterknife:8.2.1'
     apt 'com.jakewharton:butterknife-compiler:8.2.1'
-    compile project(':library')
+//    compile project(':library')
 
 }
 

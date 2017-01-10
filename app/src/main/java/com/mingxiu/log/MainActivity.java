@@ -1,5 +1,6 @@
 package com.mingxiu.log;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatSpinner;
@@ -76,7 +77,6 @@ public class MainActivity extends AppCompatActivity {
 //                .configFormatTag("%d{HH:mm:ss:SSS} %t %c{-5}")
 //                .configTagPrefix("測試")
 //                .configLevel(LogLevel.TYPE_VERBOSE);
-
         setUp();
     }
 
@@ -100,18 +100,18 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    @OnClick({R.id.btn_String, R.id.btn_Object, R.id.btn_list, R.id.btn_listString, R.id.btn_json, R.id.btn_xml,R.id.btn_intent})
+    @OnClick({R.id.btn_String, R.id.btn_Object, R.id.btn_list, R.id.btn_listString, R.id.btn_json, R.id.btn_xml, R.id.btn_intent})
     public void onClick(View view) {
         LogUtils.getLogConfig()
                 .configAllowLog(mBtnConfigAllowLog.isChecked())
                 .configShowBorders(mBtnConfigShowBorders.isChecked())
-//                .configFormatTag("%d{HH:mm:ss:SSS} %t %c{-5}")
-//                .configTagPrefix(TextUtils.isEmpty(mEtTag.getText().toString()) ? "測試Tag" : mEtTag.getText().toString())
+                .configTagPrefix(TextUtils.isEmpty(mEtTag.getText().toString()) ? "測試Tag" : mEtTag.getText().toString())
                 .configLevel(getTYPE(string));
         LogUtils.tag(TextUtils.isEmpty(mEtTag.getText().toString()) ? "" : mEtTag.getText().toString());
 
         switch (view.getId()) {
             case R.id.btn_String:
+                startActivityForResult(new Intent(this, OtherActivity.class), 520);
                 LogWriterString();
                 break;
             case R.id.btn_Object:
@@ -135,23 +135,27 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        LogUtils.d("requestCode = " + requestCode);
+    }
 
     //打印字符串
     private void LogWriterString() {
-        LogUtils.d("春运火车票今开售 腊月二十八的票最难抢到");
-//        com.apkfuns.logutils.LogUtils.getLogConfig()
-//                .configAllowLog(true)
-//                .configTagPrefix("MyAppName")
-//                .configShowBorders(true)
-//                .configFormatTag("%d{HH:mm:ss:SSS} %t %c{-5}")
-//                .configLevel(LogLevel.TYPE_VERBOSE);
-//        com.apkfuns.logutils.LogUtils.d("春运火车票今开售 腊月二十八的票最难抢到",new User("小明", "13872829574"),new User("小明", "13872829574"),new User("小明", "13872829574"));
+
+        String s = "{\"state_code\":411,\"message\":\"https://my.oschina.net/swords/blog/117357\"}";
+        LogUtils.json(s);
+        LogUtils.d("s.length() = " + s.length());
+        String str = "";
+        LogUtils.d("str.length() = " + str.length());
     }
 
     //打印Object
     private void LogWriterObject() {
         LogUtils.d(new User("小明", "13872829574"));
     }
+
     //打印Intent
     private void LogWriterIntent() {
         LogUtils.d(getIntent());
@@ -173,7 +177,9 @@ public class MainActivity extends AppCompatActivity {
 
     //打印Json
     private void LogWriterJson() {
-        LogUtils.json("{\"bidder\":{\"id\":2728,\"demandId\":3075,\"userId\":5641,\"price\":123456,\"createTime\":1482480234000,\"state\":2,\"stateName\":\"中标\",\"desc\":\"呵呵黑得给的呵呵呵\",\"userName\":\"13872829574\",\"userHeadImg\":\"https://img.paralworld.com/upload/avatars/default/default_girl.png\",\"totalBidNumber\":null,\"invoiceSample\":\"\",\"companyName\":\"\",\"coupon\":null,\"useCoupon\":false,\"agent\":false},\"detail\":{\"demandId\":3075,\"orderNo\":\"20161223160230108924\",\"createTime\":1482480149000,\"title\":\"测试需求变更\",\"type\":1,\"typeName\":\"道路\",\"parentId\":9,\"parentTypeName\":\"效果图\",\"state\":12,\"stateName\":\"进行中\",\"isInvoice\":0,\"budget\":123456.0,\"price\":123456.0,\"employerUid\":6503,\"employerName\":\"UID6503\",\"employerHeadImg\":\"https://img.paralworld.com/upload/avatars/default/default_girl.png\",\"facilitatorUid\":5641,\"facilitatorName\":\"13872829574\",\"facilitatorHeadImg\":\"https://img.paralworld.com/upload/avatars/default/default_girl.png\",\"bidNumber\":1,\"biddingMode\":1,\"biddingModeName\":\"招标\",\"desc\":\"呵呵黑得和的活动很多很多很多话的和\",\"publishFileSrc\":\"http://o6nc2brpt.bkt.clouddn.com/1482481282073.jpg|http://o6nc2brpt.bkt.clouddn.com/1482480572013.jpg\",\"inviteIds\":\"\",\"completeFileSrc\":\"\",\"isBid\":1,\"isBidSelf\":false,\"inteval\":3,\"intevalSec\":null,\"intevalCloseSec\":null,\"collectId\":0,\"isCollected\":0,\"isBoutique\":null,\"applyCloseTime\":null,\"completeTime\":null,\"bidEndTime\":1485162000000,\"workEndTime\":1482566712000,\"qzState\":null,\"applyChangeTime\":null,\"isGuarantee\":false,\"isMaker\":false,\"ckState\":0,\"ckStateName\":\"\",\"changedPrice\":0.0,\"descNew\":\"\",\"publishFileSrcNew\":\"\",\"descEffect\":\"呵呵黑得和的活动很多很多很多话的和\",\"publishFileSrcEffect\":\"http://o6nc2brpt.bkt.clouddn.com/1482481282073.jpg|http://o6nc2brpt.bkt.clouddn.com/1482480572013.jpg|http://o6nc2brpt.bkt.clouddn.com/1482485687301.jpg\",\"demandChangeCounts\":3,\"invoiceTitle\":null,\"invoiceCompanyName\":null,\"afterTaxAmount\":null,\"deliverState\":0,\"afterTaxAmountTotal\":0,\"taxRate\":0.0,\"bidPrice\":0.0,\"invoiceSample\":\"\",\"companyName\":\"\",\"couponMoney\":0,\"couponAccount\":0,\"staysNumber\":3,\"staysContent\":\"\",\"contractType\":1,\"isStage\":false,\"staysNumberChanging\":0,\"staysContentChanging\":\"\",\"isStageChanging\":false,\"useCoupon\":false,\"agent\":false},\"state_code\":200,\"message\":\"查询订单信息成功\",\"list\":[]}");
+        LogUtils.json("{\"state_code\":447,\"message\":\"每位代付人只能邀请一次\"}");
+        LogUtils.json("{\"state_code\":447,\"message\":\"每位代付人只能邀请一次\",\"messages\":\"每位代付人只能邀请一次\",\"messagess\":\"每位代付人只能邀请一次\"}");
+        LogUtils.json("{\"bidder\":{\"id\":2594,\"demandId\":2941,\"userId\":5492,\"price\":11111,\"createTime\":1481595489000,\"state\":2,\"stateName\":\"中标\",\"desc\":\"很多时候上课上的看法\\n说的分手大师翻领设计的弗兰克\\n说的分手的分手的空间上\\n说的分手的分手放得开；\\n水电费水电费水电费的司法考试的\\n水淀粉\",\"userName\":\"浪里个浪浪\",\"userHeadImg\":\"https://img.paralworld.com/upload/avatars/5492/medium.jpg?1644883338\",\"totalBidNumber\":null,\"invoiceSample\":\"\",\"companyName\":\"\",\"coupon\":null,\"agent\":false,\"useCoupon\":false},\"detail\":{\"demandId\":2941,\"orderNo\":\"20161212140825957141\",\"createTime\":1481522899000,\"title\":\"测试TextScrollView bar\",\"type\":1,\"typeName\":\"道路\",\"parentId\":9,\"parentTypeName\":\"效果图\",\"state\":12,\"stateName\":\"进行中\",\"isInvoice\":0,\"budget\":123456.0,\"price\":11111.0,\"employerUid\":6503,\"employerName\":\"UID6503\",\"employerHeadImg\":\"https://img.paralworld.com/upload/avatars/default/default_girl.png\",\"facilitatorUid\":5492,\"facilitatorName\":\"浪里个浪浪\",\"facilitatorHeadImg\":\"https://img.paralworld.com/upload/avatars/5492/medium.jpg?1644883338\",\"bidNumber\":2,\"biddingMode\":1,\"biddingModeName\":\"招标\",\"desc\":\"hhshs民工您婆媳嘻嘻嘻嘻XP我婆婆送您破POSXPXP明你OK您婆婆上hhshs民工您婆媳嘻嘻嘻嘻XP我婆婆送您破POSXPXP明你OK您婆婆上午无语中mins午无语中minhhshs民工您婆媳嘻嘻嘻嘻XP我婆婆送您破POSXPXP明你OK您婆婆上hhshs民工您婆媳嘻嘻嘻嘻XP我婆婆送您破POSXPXP明你OK您婆婆上hhshs民工您婆媳嘻嘻嘻嘻XP我婆婆送您破POSXPXP明你OK您婆婆上hhshs民工hhshs民工您婆媳嘻嘻嘻嘻XP我婆婆送您破POSXPXP明你婆媳嘻嘻嘻嘻XP我婆婆送您破POSXPXP明你OK您婆婆上午无语中mins午无语中mins午无语中mins午无语中minss\",\"publishFileSrc\":\"http://o6nc2brpt.bkt.clouddn.com/1481523477698.jpg|http://o6nc2brpt.bkt.clouddn.com/1481523086787.jpg|http://o6nc2brpt.bkt.clouddn.com/1481523642002.jpg|http://o6nc2brpt.bkt.clouddn.com/1481523538590.jpg|http://o6nc2brpt.bkt.clouddn.com/1481523832415.jpg\",\"inviteIds\":\"\",\"completeFileSrc\":\"\",\"isBid\":1,\"isBidSelf\":false,\"inteval\":-9,\"intevalSec\":null,\"intevalCloseSec\":null,\"collectId\":0,\"isCollected\":0,\"isBoutique\":null,\"applyCloseTime\":null,\"completeTime\":null,\"bidEndTime\":1484204400000,\"workEndTime\":1513062000000,\"qzState\":null,\"applyChangeTime\":null,\"isGuarantee\":false,\"isMaker\":false,\"ckState\":0,\"ckStateName\":\"\",\"changedPrice\":0.0,\"descNew\":\"\",\"publishFileSrcNew\":\"\",\"descEffect\":\"hhshs民工您婆媳嘻嘻嘻嘻XP我婆婆送您破POSXPXP明你OK您婆婆上hhshs民工您婆媳嘻嘻嘻嘻XP我婆婆送您破POSXPXP明你OK您婆婆上午无语中mins午无语中minhhshs民工您婆媳嘻嘻嘻嘻XP我婆婆送您破POSXPXP明你OK您婆婆上hhshs民工您婆媳嘻嘻嘻嘻XP我婆婆送您破POSXPXP明你OK您婆婆上hhshs民工您婆媳嘻嘻嘻嘻XP我婆婆送您破POSXPXP明你OK您婆婆上hhshs民工hhshs民工您婆媳嘻嘻嘻嘻XP我婆婆送您破POSXPXP明你婆媳嘻嘻嘻嘻XP我婆婆送您破POSXPXP明你OK您婆婆上午无语中mins午无语中mins午无语中mins午无语中minss\",\"publishFileSrcEffect\":\"\",\"demandChangeCounts\":1,\"invoiceTitle\":null,\"invoiceCompanyName\":null,\"afterTaxAmount\":null,\"deliverState\":0,\"afterTaxAmountTotal\":0,\"taxRate\":null,\"bidPrice\":0.0,\"invoiceSample\":\"\",\"companyName\":\"\",\"couponMoney\":0,\"couponAccount\":0,\"staysNumber\":3,\"staysContent\":\"各地热||iOS哦傻X\",\"contractType\":1,\"isStage\":true,\"staysNumberChanging\":0,\"staysContentChanging\":\"\",\"isStageChanging\":false,\"agent\":false,\"useCoupon\":false},\"state_code\":200,\"message\":\"查询订单信息成功\",\"list\":[{\"id\":2591,\"demandId\":2941,\"userId\":5641,\"price\":123456,\"createTime\":1482137733000,\"state\":3,\"stateName\":\"被淘汰\",\"desc\":\"哦POSXP我是我是形容orz是我婆婆日子微信婆婆婆婆婆婆in哦POSXP我是我是形容orz是我婆婆日子微信婆婆婆婆婆婆in哦POSXP我是我是形容orz是我婆婆日子微信哦POSXP我是我是形容orz是我婆婆日子微信婆婆婆婆婆婆in哦POSXP我是我是形容orz是我婆婆哦POSXP我是我是形容orz是我婆婆日子微信婆婆婆婆婆婆in哦POSXP我是我是形容orz是我哦POSXPs\\n阿达大师大师大师vvvvhhhhh\",\"userName\":\"13872829574\",\"userHeadImg\":\"https://img.paralworld.com/upload/avatars/default/default_girl.png\",\"totalBidNumber\":null,\"invoiceSample\":\"\",\"companyName\":\"\",\"coupon\":null,\"agent\":false,\"useCoupon\":false}]}");
     }
 
     //打印Xml
